@@ -10,9 +10,9 @@ const pool = new Pool({
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
 });
-
+//https://staging.lizeedu.com.br/api/v2/students
 // Configuração da API LizeEdu
-const API_URL = 'https://api.lizeedu.com.br/api/v2/students/';
+const API_URL = 'https://staging.lizeedu.com.br/api/v2/students/';
 const HEADERS = {
     Authorization: `Bearer ${process.env.LIZE_API_TOKEN}`,
     Accept: 'application/json',
