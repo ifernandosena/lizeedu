@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log de Alocação</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #3a3a3a;
+            margin-bottom: 20px;
+        }
+
+        .filters {
+            margin-bottom: 20px;
+        }
+
+        label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        input[type="date"] {
+            padding: 8px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f4f4f4;
+            color: #555;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        td {
+            color: #666;
+        }
+
+        .no-data {
+            text-align: center;
+            font-style: italic;
+            color: #aaa;
+        }
+
+        @media (max-width: 768px) {
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+
+            button {
+                width: 100%;
+                padding: 12px;
+            }
+        }
+    </style>
+    <script defer>
+        async function buscarDados() {
+            const inicio = document.getElementById('dataInicio').value;
+            const fim = document.getElementById('dataFim').value;
+
+            if (!inicio || !fim) {
+                alert('Por favor, selecione as datas de início e fim.');
+                return;
+            }
+
+            const response = await fetch(`/api/log_alocacao?inicio=${inicio}&fim=${fim}`);
+            const dados = await response.json();
+
+            const tabela = document.getElementById('tabelaDados');
+            tabela.innerHTML = ""; // Limpar os dados anteriores
+
+            if (dados.length === 0) {
+                tabela.innerHTML = "<tr><td colspan='8' class='no-data'>Nenhum registro encontrado.</td></tr>";
+                return;
+            }
+
+            dados.forEach(log => {
+                const linha = `<tr>
+                    <td>${log.id}</td>
+                    <td>${log.unidade}</td>
+                    <td>${log.tipo}</td>
+                    <td>${log.quem}</td>
+                    <td>${log.quando}</td>
+                    <td>${log.msg}</td>
+                    <td>${log.original_data}</td>
+                    <td>${log.new_data}</td>
+                </tr>`;
+                tabela.innerHTML += linha;
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Log de Alocação</h1>
+    <div class="filters">
+        <label for="dataInicio">Data Início:</label>
+        <input type="date" id="dataInicio">
+        <label for="dataFim">Data Fim:</label>
+        <input type="date" id="dataFim">
+        <button onclick="buscarDados()">Buscar</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Unidade</th>
+                <th>Tipo</th>
+                <th>Quem</th>
+                <th>Quando</th>
+                <th>Mensagem</th>
+                <th>Data Original</th>
+                <th>Nova Data</th>
+            </tr>
+        </thead>
+        <tbody id="tabelaDados">
+            <tr><td colspan="8" class="no-data">Selecione um período e clique em buscar.</td></tr>
+        </tbody>
+    </table>
+</body>
+</html>

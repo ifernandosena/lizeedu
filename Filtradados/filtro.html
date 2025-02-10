@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log de Alocação</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+    </style>
+    <script defer>
+        async function buscarDados() {
+            const inicio = document.getElementById('dataInicio').value;
+            const fim = document.getElementById('dataFim').value;
+
+            if (!inicio || !fim) {
+                alert('Por favor, selecione as datas de início e fim.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/log_alocacao?inicio=${inicio}&fim=${fim}`);
+                const dados = await response.json();
+
+                const tabela = document.getElementById('tabelaDados');
+                tabela.innerHTML = "";
+
+                if (dados.length === 0) {
+                    tabela.innerHTML = "<tr><td colspan='5'>Nenhum registro encontrado.</td></tr>";
+                    return;
+                }
+
+                dados.forEach(log => {
+                    const linha = `<tr>
+                        <td>${log.id}</td>
+                        <td>${log.quando}</td>
+                        <td>${log.usuario}</td>
+                        <td>${log.acao}</td>
+                        <td>${log.detalhes}</td>
+                    </tr>`;
+                    tabela.innerHTML += linha;
+                });
+            } catch (error) {
+                console.error("Erro ao buscar dados:", error);
+                alert("Erro ao buscar os dados.");
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Log de Alocação</h1>
+    <label>Data Início: <input type="date" id="dataInicio"></label>
+    <label>Data Fim: <input type="date" id="dataFim"></label>
+    <button onclick="buscarDados()">Buscar</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Data</th>
+                <th>Usuário</th>
+                <th>Ação</th>
+                <th>Detalhes</th>
+            </tr>
+        </thead>
+        <tbody id="tabelaDados">
+            <tr><td colspan="5">Selecione um período e clique em buscar.</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        // Backend em Node.js + Express (Rodando diretamente no mesmo arquivo)
+        const express = require('express');
+        const { Pool } = require('pg');
+        const cors = require('cors');
+
+        const app = express();
+        app.use(cors());
+
+        const pool = new Pool({
+            user: 'postgres',
+            host: '192.168.1.163',
+            database: 'DGP',
+            password: 'teste',
+            port: 5432
+        });
+
+        app.get('/api/log_alocacao', async (req, res) => {
+            const { inicio, fim } = req.query;
+            if (!inicio || !fim) {
+                return res.status(400).json({ error: "Datas são obrigatórias." });
+            }
+
+            try {
+                const query = `
+                    SELECT * FROM public.log_alocacao 
+                    WHERE quando::timestamp >= $1::timestamp 
+                    AND quando::timestamp <= $2::timestamp 
+                    ORDER BY quando DESC
+                `;
+                const { rows } = await pool.query(query, [inicio, fim]);
+                res.json(rows);
+            } catch (error) {
+                console.error("Erro na consulta:", error);
+                res.status(500).json({ error: "Erro ao buscar os dados." });
+            }
+        });
+
+        app.listen(3000, () => console.log("Servidor rodando em http://localhost:3000"));
+    </script>
+</body>
+</html>
